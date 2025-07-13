@@ -1,7 +1,5 @@
 # PSO
 
-> Primary Goal: Develop a PSO code without the use of any AI assistance at all 
-
 ## Preparing requirements
 
 ### The equation
