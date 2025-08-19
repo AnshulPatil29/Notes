@@ -323,3 +323,40 @@ This would give two tables (dummy data) with structure:
 ```
 
 > At this point the author addresses concerns about this abstraction not keeping the data human readable by clarifying that data being separated like this in RDBMS is not a problem as it can be JOINED to be human readable quite easily.
+
+Another small change is that instead of using `name`, we will be using `student_id` in the `score_table` and then use a `student` table which stores the details of that student such as `name` `sex` and `student_id`. This is useful as we can store more information without duplicating it redundantly, and avoid the problem of students having the same name.
+
+
+
+Here is an example query to retrieve the scores fora  given date:
+
+```sql
+SELECT student.name ,grade_event.date, score.score, grade_event.category
+FROM grade_event INNER JOIN score INNER JOIN student
+ON grade_event.event_id =score.event_id
+AND score.student_id=student.student_id
+WHERE grade_event.date = '2012-09-23';
+```
+
+**The `student` table**
+
+```sql
+CREATE TABLE student
+(
+  name VARCHAR(20) NOT NULL,
+  sex ENUM('F','M') NOT NULL,
+  student_id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  PRIMARY KEY(student_id),
+  ENGINE=InnoDB  
+);
+```
+
+- `ENUM({comma-separated-choices})`: this enforces a strict set of choices for the value of this column for any row. The choices must be of the same datatype, and internally, they are all coerced into strings.
+
+- `ENGINE`: This clause, if present, names the storage engine that MySQL should use for creating the table. A "storage engine" is a handler that manages certain kind of table. At this stage this storage engine term is not explained; as far as I have understood,  the ENGINE decides how the data is stored, and certain engines may be better based on the requirements such as: transaction heavy, read heavy, temporary lookups etc.
+
+- Here `InnoDB`, the default storage engine of SQL has been used due to a property called "referential integrity" (to create an entry, the corresponding key must exist in the table where the foreign key is a primary key).
+
+**The `grade_event` table**
+
+*Continue from page 47, progress made from page 34*
