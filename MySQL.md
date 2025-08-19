@@ -1,5 +1,7 @@
 # MySQL
 
+*These are notes I created when reading Paul DuBois's MySQL Fifth Edition. The notes follow chapter numbering scheme*
+
 ## 1. Getting Started with MySQL
 
 ### 1.1 How SQL can help you
@@ -140,9 +142,7 @@ I am simply mentioning the fields as the above example shows the reasoning proce
 
 - **Special Interest Keywords**
 
-
-
-##### Creating the historical league tables:
+##### 1.4.6.1 Creating the historical league tables:
 
 To create a table, the statement has the general form of 
 
@@ -155,9 +155,9 @@ For the `president` table, write the `CREATE TABLE` statement as follows:
 ```sql
 CREATE TABLE president 
 (
-	last_name VARCHAR(15) NOT NULL,
+    last_name VARCHAR(15) NOT NULL,
     first_name VARCHAR(15) NOT NULL,
-	suffix VARCHAR(5) NULL,
+    suffix VARCHAR(5) NULL,
     city VARCHAR(20) NOT NULL,
     state CHAR(2) NOT NULL,
     birth DATE NOT NULL,
@@ -184,7 +184,7 @@ For the `member` table, the `CREATE TABLE` statement looks like this:
 ```sql
 CREATE TABLE member
 (
-	member_id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    member_id INT UNSIGNED NOT NULL AUTO_INCREMENT,
     PRIMARY KEY(member_id),
     last_name VARCHAR(20) NOT NULL,
     first_name VARCHAR(20) NOT NULL,
@@ -213,3 +213,113 @@ Lets breakdown the `member_id` definition:
 - `PRIMARY KEY` indicates that this column is indexed to enable fast lookups. It also sets up the `NOT NULL` and `UNIQUE` constraint.
 
 - Note: MySQL requires `AUTO_INCREMENT` to have some kind of index (no idea what it means but seemed important to note here so I can refer back later)  
+
+
+
+Now that we have created a few tables, we can check out the structure of the tables by using:
+
+```sql
+DESCRIBE president
+```
+
+This will yield an output like:
+
+```bash
++------------+-------------+------+-----+---------+-------+
+| Field      | Type        | Null | Key | Default | Extra |
++------------+-------------+------+-----+---------+-------+
+| last_name  | varchar(15) | NO   |     | NULL    |       |
+| first_name | varchar(15) | NO   |     | NULL    |       |
+| suffix     | varchar(5)  | YES  |     | NULL    |       |
+| city       | varchar(20) | NO   |     | NULL    |       |
+| state      | char(2)     | NO   |     | NULL    |       |
+| birth      | date        | NO   |     | NULL    |       |
+| death      | date        | YES  |     | NULL    |       |
++------------+-------------+------+-----+---------+-------+
+7 rows in set (0.00 sec)
+```
+
+`NULL` in default indicates that the column has no explicitly defined default case.
+
+This order is important when using `INSERT` or `LOAD DATA`.
+
+> The following statements are synonymous:
+> 
+> ```sql
+> DESCRIBE president;
+> DESC president;
+> EXPLAIN president;
+> SHOW COLUMNS FROM president;
+> SHOW FIELDS FROM president;
+> ```
+
+> These also allow you to restrict description to only certain columns by adding constraints. example:
+> 
+> ```sql
+> SHOW COLUMNS FROM president LIKE "%name";
+> ```
+
+> `SHOW FULL COLUMNS` displays additional information.
+
+The `SHOW` statement is also useful to show other information such as `TABLES` and `DATABASES`
+
+Running `SHOW DATABASES` yields:
+
+```bash
++--------------------+
+| Database           |
++--------------------+
+| information_schema |
+| mydb               |
+| mysql              |
+| performance_schema |
+| sampdb             |
+| sys                |
++--------------------+
+6 rows in set (0.00 sec)
+```
+
+**IMPORTANT**: The database `information_schema` will always exists as it is a special database. It is a *virtual database* which holds metadata and can be queried. It contains metadata about the tables. (Think of it like a database of databases)
+
+##### 1.4.6.2 Creating the Grade-Keeping tables:
+
+Here the book talks about how certain column's value depends on another column's value (in the case of the books example on page 40, it shows how the category depends on the date of the examination)
+
+This is used to present a use-case and advantage of using related and normalized tables. The book goes on to justify how creating two tables is not extra work as that work is already being done when we create the extra column in the original table.
+
+This does impose a requirement that the linked column in this case `grade_event`, must be unique since when we link the two tables, a singular row cannot map to multiple entries. [`FOREIGN KEY` must exist and be unique in the table we are linking it to].
+
+The problem in this case is that `grade_event` refers to what test happened on that day. But is it reasonable to assume that no more than one grade event will happen on a single day? Looking at the data, that may seem to be the case, but we can't be sure that such a case will never occur in future.
+
+To fix this, the solution is rather simple: create a `grade_event_table` such that it has a unique ID for each event, and its corresponding date and category. The unique ID means that the uniqueness requirement is now fulfilled for that key, without forcing the dates to be unique.
+
+This would give two tables (dummy data) with structure:
+
+**`grade_event_table`**
+
+```bash
++----------+------------+----------+
+| event_id | date       | category |
++----------+------------+----------+
+|        1 | 2024-08-01 | exam     |
+|        2 | 2024-08-15 | quiz     |
+|        3 | 2024-08-30 | project  |
++----------+------------+----------+
+```
+
+**`score_table`**
+
+```bash
++-------+----------+-------+
+| name  | event_id | score |
++-------+----------+-------+
+| John  |        1 |    85 |
+| Alice |        1 |    92 |
+| John  |        2 |    78 |
+| Alice |        2 |    88 |
+| John  |        3 |    90 |
+| Alice |        3 |    95 |
++-------+----------+-------+
+```
+
+> At this point the author addresses concerns about this abstraction not keeping the data human readable by clarifying that data being separated like this in RDBMS is not a problem as it can be JOINED to be human readable quite easily.
