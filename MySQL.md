@@ -214,8 +214,6 @@ Lets breakdown the `member_id` definition:
 
 - Note: MySQL requires `AUTO_INCREMENT` to have some kind of index (no idea what it means but seemed important to note here so I can refer back later)  
 
-
-
 Now that we have created a few tables, we can check out the structure of the tables by using:
 
 ```sql
@@ -326,8 +324,6 @@ This would give two tables (dummy data) with structure:
 
 Another small change is that instead of using `name`, we will be using `student_id` in the `score_table` and then use a `student` table which stores the details of that student such as `name` `sex` and `student_id`. This is useful as we can store more information without duplicating it redundantly, and avoid the problem of students having the same name.
 
-
-
 Here is an example query to retrieve the scores fora  given date:
 
 ```sql
@@ -346,9 +342,8 @@ CREATE TABLE student
   name VARCHAR(20) NOT NULL,
   sex ENUM('F','M') NOT NULL,
   student_id INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  PRIMARY KEY(student_id),
-  ENGINE=InnoDB  
-);
+  PRIMARY KEY(student_id)  
+)ENGINE=InnoDB;
 ```
 
 - `ENUM({comma-separated-choices})`: this enforces a strict set of choices for the value of this column for any row. The choices must be of the same datatype, and internally, they are all coerced into strings.
@@ -359,4 +354,27 @@ CREATE TABLE student
 
 **The `grade_event` table**
 
-*Continue from page 47, progress made from page 34*
+```sql
+CREATE TABLE grade_event
+(
+    date DATE NOT NULL,
+    category ENUM('T','Q') NOT NULL,
+    event_id INT UNSIGNED AUTO_INCREMENT NOT NULL,
+    PRIMARY KEY(event_id)
+)ENGINE=InnoDB;
+```
+
+**The `score` table**
+
+```sql
+CREATE TABLE score
+(
+    student_id INT UNSIGNED NOT NULL,
+    event_id INT UNSIGNED NOT NULL,
+    score INT NOT NULL,
+    PRIMARY KEY(student_id,event_id),
+    INDEX(student_id),
+    FOREIGN KEY(event_id) REFERENCES grade_event(event_id),
+    FOREIGN KEY(student_id) REFERENCES student(student_id),
+)ENGINE=InnoDB;
+```
