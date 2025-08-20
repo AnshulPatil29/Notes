@@ -372,9 +372,37 @@ CREATE TABLE score
     student_id INT UNSIGNED NOT NULL,
     event_id INT UNSIGNED NOT NULL,
     score INT NOT NULL,
-    PRIMARY KEY(student_id,event_id),
+    PRIMARY KEY(event_id,student_id),
     INDEX(student_id),
     FOREIGN KEY(event_id) REFERENCES grade_event(event_id),
     FOREIGN KEY(student_id) REFERENCES student(student_id),
 )ENGINE=InnoDB;
 ```
+
+> This is where we talk about composite keys and foreign keys.
+
+- Here the primary key is comprised of two attributes, namely `student_id` and `event_id`, neither of which by themselves are unique but taken as a set, together they are unique. This prevents the score for any student for a particular test being duplicated.
+
+- The `FOREIGN KEY` constraint forces the *referential integrity* that was mentioned earlier. Simply put, it means that for the constraint of structure: `FOREIGN KEY(column-name) REFERENCES table-name(corresponding-column-name)`, for any entry in this table, the corresponding value must exist in the `corresponding-column-name` of `table-name`. Lets take an example of `event_id`, this ensures that no score is added for an event which does not exist in the `grade_event` table first. Which makes logical sense as how can a score exist for a test which did not occur.
+
+- **IMPORTANT**: Why is there an index on `student_id`? Before we answer that, what is an *index*?
+
+> Indexing is a way to speed up data retrieval by minimizing disk scans. Instead of searching through all the rows, DBMS uses index structures which locate data using key values.
+> 
+> **Attributes of indexing**:
+> 
+> - Access types
+> 
+> - Access time
+> 
+> - Insertion time
+> 
+> - Deletion time
+> 
+> - Space overhead
+> 
+> Indexing seems like an entire topic by itself so I will look into it later. Right now, getting back to the question of why there is an index on `student_id`
+
+The reason is that, for any columns in a `FOREIGN KEY` definition, there should be an index on them or they should be the columns that are listed first in a multiple-column index, to enable faster lookups. For the `FOREIGN KEY` on `event_id`, it is listed first in the `PRIMARY KEY` but `student_id` is not, hence we create a separate index for it.
+
+InnoDB does create an index automatically if required, but it might not use the same index definition. Defining it explicitly avoids this issue. 
