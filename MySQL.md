@@ -406,3 +406,92 @@ CREATE TABLE score
 The reason is that, for any columns in a `FOREIGN KEY` definition, there should be an index on them or they should be the columns that are listed first in a multiple-column index, to enable faster lookups. For the `FOREIGN KEY` on `event_id`, it is listed first in the `PRIMARY KEY` but `student_id` is not, hence we create a separate index for it.
 
 InnoDB does create an index automatically if required, but it might not use the same index definition. Defining it explicitly avoids this issue. 
+
+**The `absence` table**
+
+```sql
+CREATE TABLE absence
+(
+    student_id    INT UNSIGNED NOT NULL,
+    date          DATE NOT NULL,
+    PRIMARY KEY(student_id,date),
+    FOREIGN KEY (student_id) REFERENCES student(student_id)
+) ENGINE=InnoDB;
+```
+
+Here `date` does not require an index as it is not used in a foreign key. 
+
+*When is index required*:
+
+- When a column is used in a foreign key, and it is not a primary key, or the first column in a composite primary key.
+
+- This is because adding a primary key automatically indexes it.
+
+#### 1.4.7 Adding New Rows
+
+Before adding any data into a table, it is useful to check what is in the table. So we run
+
+```sql
+SELECT * from tbl_name
+```
+
+Although we should likely check the schema, or limit the results as this may be an expensive query for a very large database.
+
+There are several ways to add data to a table:
+
+- You can add rows manually by issuing `INSERT` statements.
+
+- Adding data from a file by either formatting them and issuing `INSERT` statements or
+
+- Raw data values loaded using `LOAD DATA` statements
+
+- Using the `mysqlimport` client program 
+
+##### 1.4.7.1 Adding rows with `INSERT`
+
+1. **Specifying values for all the columns**:
+
+```sql
+INSERT INTO tbl_name VALUES (value1,value2,value3,...)
+```
+
+Example:
+
+```sql
+INSERT INTO student VALUES('Kyle','M',NULL);
+INSERT INTO grade_event VALUES('2012-09-03','Q',NULL);
+```
+
+2. **This must be in the order that the columns were set up**.
+
+If we want to add multiple values at once we can do this with the syntax:
+
+```sql
+INSERT INTO tbl_name VALUES (...),(...),...
+```
+
+Example:
+
+```sql
+INSERT INTO student VALUES ('Avery','F',NULL),('Nathan','M',NULL)
+```
+
+3. **Specifying the columns to be assigned values and the list of values** 
+
+```sql
+INSERT INTO member(last_name,first_name) VALUES('Stein','Waldo')
+```
+
+This also works with multiple values
+
+For any column not named in the column list, MySQL assigns its default value. This can either be a specified default value, an auto_increment, or if none is defined, a default `NULL` value.
+
+4. **Providing a list of columns/value assignments using `SET`**
+
+```sql
+INSERT INTO member SET last_name='Stein', first_name='Waldo'
+```
+
+---
+
+Now that we know how `INSERT` works, we can now test 
